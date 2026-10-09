@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      ".firebaserc",
+      "**/.*",
+      "**/node_modules/**",
+      "SheetSync.gs"
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isStaff() {
+      return request.auth != null
+        && request.auth.token.email in [
+          'vipmobile1317@gmail.com',
+          'abdujalilov7707@gmail.com'
+        ];
+    }
+
+    // Real warehouse data: cost prices, suppliers, buyer/seller phone numbers.
+    // Staff only — never readable by an anonymous visitor.
+    match /phones/{id} {
+      allow read, write: if isStaff();
+    }
+    match /stock/{id} {
+      allow read, write: if isStaff();
+    }
+    match /meta/{id} {
+      allow read, write: if isStaff();
+    }
+
+    // Public storefront mirror: only the safe subset of fields the admin app
+    // writes here (see syncDeviceToCatalog/syncStockToCatalog in index.html).
+    // Anyone may read; only staff may write (writes normally happen from the
+    // admin app itself, but keep this locked down server-side too).
+    match /catalog_devices/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /catalog_stock/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
