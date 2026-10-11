@@ -6,8 +6,7 @@
       "firestore.rules",
       ".firebaserc",
       "**/.*",
-      "**/node_modules/**",
-      "SheetSync.gs"
+      "**/node_modules/**"
     ]
   },
   "firestore": {

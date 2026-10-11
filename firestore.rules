@@ -2,30 +2,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Replace with the staff accounts for THIS warehouse Firebase project.
+    // This project is intentionally separate from the Sales (1C) app's
+    // Firebase project — don't reuse that allowlist or merge the data.
     function isStaff() {
       return request.auth != null
         && request.auth.token.email in [
-          'vipmobile1317@gmail.com',
-          'abdujalilov7707@gmail.com'
+          'REPLACE_WITH_STAFF_EMAIL_1',
+          'REPLACE_WITH_STAFF_EMAIL_2'
         ];
     }
 
-    // Real warehouse data: cost prices, suppliers, buyer/seller phone numbers.
-    // Staff only — never readable by an anonymous visitor.
-    match /phones/{id} {
+    // Real warehouse data: cost prices, suppliers. Staff only.
+    match /items/{id} {
       allow read, write: if isStaff();
     }
     match /stock/{id} {
       allow read, write: if isStaff();
     }
-    match /meta/{id} {
-      allow read, write: if isStaff();
-    }
 
-    // Public storefront mirror: only the safe subset of fields the admin app
-    // writes here (see syncDeviceToCatalog/syncStockToCatalog in index.html).
-    // Anyone may read; only staff may write (writes normally happen from the
-    // admin app itself, but keep this locked down server-side too).
+    // Public storefront mirror: only the safe subset of fields the admin
+    // app writes here (see syncItemToCatalog/syncStockToCatalog in
+    // warehouse.html). Anyone may read; only staff may write.
     match /catalog_devices/{id} {
       allow read: if true;
       allow write: if isStaff();

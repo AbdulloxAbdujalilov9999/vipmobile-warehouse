@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VIP Mobile Warehouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1224; --surface:#111B34; --surface-2:#182545; --border:#28355C;
+    --ink:#EAF0FF; --ink-dim:#8FA0C8; --ink-faint:#5C6A93;
+    --accent:#4C7CF0; --accent-ink:#FFFFFF; --accent-soft:#1C2C57;
+    --gold:#E3B65C; --gold-soft:#2C2417;
+    --success:#3ED598; --success-soft:#123024;
+    --danger:#FF6B6B; --danger-soft:#3A1A1D;
+    --slate:#8FA0C8; --slate-soft:#1A2340;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.75);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{ background:var(--bg); height:100%; }
+  body{ margin:0; color:var(--ink); font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  .mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  h1,h2,h3{ font-family:'Manrope',sans-serif; margin:0; text-wrap:balance; }
+  button{ font-family:inherit; }
+
+  .app{ display:flex; min-height:100vh; align-items:flex-start; }
+  .app[hidden]{ display:none; }
+  .sidebar{ width:224px; flex:none; background:var(--surface); border-right:1px solid var(--border); position:sticky; top:0; height:100vh; overflow-y:auto; padding:18px 14px; display:flex; flex-direction:column; gap:18px; z-index:40; }
+  .brand{ display:flex; align-items:center; gap:10px; padding:0 4px; }
+  .brand-mark{ width:34px; height:34px; border-radius:9px; background:linear-gradient(150deg,var(--success),#0d4a34); display:flex; align-items:center; justify-content:center; flex:none; }
+  .brand-name{ font-weight:800; font-size:17px; letter-spacing:-0.01em; }
+  .brand-sub{ font-size:11px; color:var(--ink-dim); margin-top:-2px; }
+
+  nav.tabs{ display:flex; flex-direction:column; gap:3px; }
+  .tab-btn{ appearance:none; border:none; background:transparent; color:var(--ink-dim); font-weight:700; font-size:14.5px; padding:11px 12px; border-radius:10px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:9px; text-align:left; width:100%; }
+  .tab-btn.active{ color:var(--ink); background:var(--accent-soft); }
+  .tab-btn:hover{ color:var(--ink); background:var(--surface-2); }
+  .tab-btn.active:hover{ background:var(--accent-soft); }
+  .tab-count{ margin-left:auto; font-size:11px; color:var(--ink-faint); background:var(--surface-2); padding:1px 7px; border-radius:99px; font-weight:700; }
+  .tab-btn.active .tab-count{ color:var(--accent); background:var(--bg); }
+  .nav-divider{ height:1px; background:var(--border); margin:4px 6px; }
+
+  .sidebar-foot{ margin-top:auto; padding:10px 6px 2px; }
+  .status-dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-faint); flex:none; transition:background .2s; }
+  .status-dot.live{ background:var(--success); }
+  .status-dot.off{ background:var(--danger); }
+  .status-wrap{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-dim); }
+
+  .main{ flex:1; min-width:0; }
+  main.shell{ padding:24px 28px 24px; }
+  section{ display:none; }
+  section.active{ display:block; }
+
+  .mobile-topbar{ display:none; }
+  .sidebar-backdrop{ display:none; }
+  .menu-btn{ appearance:none; border:none; background:transparent; color:var(--ink); flex:none; width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #menuCloseBtn{ display:none; }
+  @media (max-width:860px){
+    .app{ display:block; }
+    .mobile-topbar{ display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:45; background:var(--surface); border-bottom:1px solid var(--border); padding:10px 14px; }
+    .sidebar{ position:fixed; top:0; left:0; height:100vh; width:82vw; max-width:280px; z-index:50; flex-direction:column; align-items:stretch; overflow-y:auto; overflow-x:hidden; transform:translateX(-100%); transition:transform .22s ease; }
+    .sidebar.open{ transform:translateX(0); box-shadow:24px 0 48px rgba(0,0,0,.5); }
+    .sidebar-backdrop{ display:block; position:fixed; inset:0; background:rgba(3,6,16,.55); z-index:46; opacity:0; pointer-events:none; transition:opacity .22s ease; }
+    .sidebar-backdrop.open{ opacity:1; pointer-events:auto; }
+    main.shell{ padding:16px 14px 24px; }
+    #menuCloseBtn{ display:flex; }
+  }
+
+  .setup-banner{ background:var(--gold-soft); border:1px solid var(--gold); border-radius:14px; padding:16px 18px; margin-bottom:20px; font-size:13px; line-height:1.6; }
+  .setup-banner b{ color:var(--gold); }
+  .setup-banner code{ background:var(--surface-2); padding:1px 6px; border-radius:5px; font-family:'IBM Plex Mono',monospace; font-size:12px; }
+
+  .page-intro{ margin-bottom:20px; }
+  .page-intro h1{ font-size:22px; font-weight:800; margin-bottom:6px; }
+  .page-intro p{ font-size:14px; color:var(--ink-dim); line-height:1.6; max-width:640px; }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px; }
+  .kpi{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 16px 14px; box-shadow:var(--shadow); }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .kpi-value{ font-size:26px; font-weight:800; margin-top:6px; }
+  .kpi-value.danger{ color:var(--danger); }
+  .kpi-sub{ font-size:12px; color:var(--ink-faint); margin-top:4px; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .search-box{ display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:9px 13px; flex:1; min-width:180px; }
+  .search-box svg{ flex:none; color:var(--ink-faint); }
+  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-size:14px; font-family:inherit; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{ appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--ink-dim); font-weight:700; font-size:12px; padding:6px 12px; border-radius:99px; cursor:pointer; font-family:inherit; }
+  .chip.active{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+
+  .btn{ appearance:none; border:1px solid var(--border); background:var(--surface-2); color:var(--ink); font-weight:700; font-size:13.5px; padding:9px 14px; border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.danger{ background:var(--danger); border-color:var(--danger); color:#2a0a0a; }
+  .btn.danger.ghost{ background:transparent; }
+  .btn.ghost{ background:transparent; }
+  .btn.sm{ padding:6px 10px; font-size:12.5px; }
+  .btn.lg{ padding:11px 18px; font-size:14px; }
+  .btn:disabled{ opacity:.5; cursor:default; }
+
+  .table-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); font-weight:700; padding:12px 14px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td{ padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.rownum{ color:var(--ink-faint); width:1%; }
+  td.mono.danger{ color:var(--danger); font-weight:700; }
+  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-dim); }
+  .group-row td{ background:var(--surface-2); font-weight:700; font-size:12.5px; color:var(--ink-dim); }
+  .group-row span{ color:var(--ink-faint); font-weight:600; }
+  .tier-divider td{ background:var(--bg); font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); padding:14px 14px 6px; border-bottom:none; }
+
+  .badge{ display:inline-block; font-size:11px; font-weight:800; padding:3px 9px; border-radius:99px; }
+  .badge.omborda{ background:var(--success-soft); color:var(--success); }
+  .badge.band{ background:var(--gold-soft); color:var(--gold); }
+  .badge.chiqarildi{ background:var(--slate-soft); color:var(--slate); }
+  .badge.yoqolgan{ background:var(--danger-soft); color:var(--danger); }
+
+  .brandtag{ font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:99px; text-transform:uppercase; }
+  .brandtag.iphone{ background:var(--accent-soft); color:var(--accent); }
+  .brandtag.samsung{ background:var(--gold-soft); color:var(--gold); }
+  .brandtag.other{ background:var(--slate-soft); color:var(--slate); }
+  .brandtag.laptop{ background:var(--success-soft); color:var(--success); }
+  .brandtag.pc{ background:var(--danger-soft); color:var(--danger); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(3,6,16,.6); display:flex; align-items:center; justify-content:center; padding:20px; z-index:80; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .modal{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; width:100%; max-width:560px; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow); position:relative; }
+  .modal.small{ max-width:420px; }
+  .modal-close{ position:absolute; top:16px; right:16px; appearance:none; border:none; background:var(--surface-2); color:var(--ink-dim); width:30px; height:30px; border-radius:9px; font-size:18px; cursor:pointer; line-height:1; }
+  .modal h2{ font-size:18px; font-weight:800; margin-bottom:4px; padding-right:30px; }
+  .modal-sub{ font-size:12.5px; color:var(--ink-dim); margin-bottom:18px; line-height:1.5; }
+  .form-section-label{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); margin:18px 0 10px; }
+  .form-section-label:first-child{ margin-top:0; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field.full{ grid-column:1/-1; }
+  .field label{ font-size:12px; font-weight:700; color:var(--ink-dim); }
+  .field input, .field select{ background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:9px 11px; color:var(--ink); font-size:13.5px; font-family:inherit; outline:none; }
+  .field input:focus, .field select:focus{ border-color:var(--accent); }
+  .form-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
+  @media (max-width:520px){ .form-grid{ grid-template-columns:1fr; } }
+
+  #toasts{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .toast{ background:var(--surface-2); border:1px solid var(--border); color:var(--ink); padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:var(--shadow); }
+  .toast.err{ border-color:var(--danger); color:#ffd6d6; }
+
+  .lock-wrap{ display:flex; align-items:center; justify-content:center; min-height:70vh; }
+  .lock-wrap[hidden]{ display:none; }
+  .lock-card{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:34px 30px; width:100%; max-width:360px; text-align:center; box-shadow:var(--shadow); }
+  .lock-card h2{ font-size:19px; font-weight:800; margin:16px 0 6px; }
+  .lock-card p{ font-size:13px; color:var(--ink-dim); margin:0 0 20px; }
+  .lock-card input{ width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:11px 13px; color:var(--ink); font-size:14px; margin-bottom:10px; font-family:inherit; }
+</style>
+</head>
+<body>
+
+<div class="lock-wrap" id="loginScreen">
+  <div class="lock-card">
+    <div class="brand-mark" style="margin:0 auto 14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg></div>
+    <h2>VIP Mobile Warehouse</h2>
+    <p>Ombor tizimiga kirish uchun hisobingizni kiriting.</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+      <input type="password" id="loginPassword" placeholder="Parol" autocomplete="current-password" required>
+      <div id="loginError" style="color:var(--danger); font-size:12.5px; margin:-4px 0 12px; display:none;"></div>
+      <button type="submit" class="btn primary lg" style="width:100%" id="loginSubmitBtn">Kirish</button>
+    </form>
+  </div>
+</div>
+
+<div class="app" id="appRoot" hidden>
+  <div class="mobile-topbar">
+    <button class="menu-btn" id="menuOpenBtn" aria-label="Menyu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="brand-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8" stroke="white" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+    <div class="brand-name" style="font-size:15px;">VIP Mobile Warehouse</div>
+  </div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8" stroke="white" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+      <div><div class="brand-name">Warehouse</div><div class="brand-sub">Ombor — faqat zaxira</div></div>
+      <button class="menu-btn" id="menuCloseBtn" style="margin-left:auto;" aria-label="Yopish"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <nav class="tabs" id="tabNav">
+      <button class="tab-btn active" data-tab="dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Bosh sahifa</span></button>
+      <button class="tab-btn" data-tab="iphone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> <span>iPhone</span> <span class="tab-count" id="count-iphone">0</span></button>
+      <button class="tab-btn" data-tab="samsung"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="7" y="2" width="10" height="20" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg> <span>Samsung</span> <span class="tab-count" id="count-samsung">0</span></button>
+      <button class="tab-btn" data-tab="other"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 8l9-5 9 5-9 5-9-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M3 8v9l9 5 9-5V8M12 13v9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> <span>Boshqa telefon</span> <span class="tab-count" id="count-other">0</span></button>
+      <button class="tab-btn" data-tab="laptop"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M2 19h20l-1.5-3h-17L2 19z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> <span>Noutbuk</span> <span class="tab-count" id="count-laptop">0</span></button>
+      <button class="tab-btn" data-tab="pc"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span>Kompyuter</span> <span class="tab-count" id="count-pc">0</span></button>
+      <button class="tab-btn" data-tab="all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg> <span>Barcha qurilmalar</span> <span class="tab-count" id="count-all">0</span></button>
+      <div class="nav-divider"></div>
+      <button class="tab-btn" data-tab="stock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> <span>Ehtiyot qismlar</span> <span class="tab-count" id="count-stock">0</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="status-wrap"><span class="status-dot" id="statusDot"></span><span id="statusText">Ulanmoqda…</span></div>
+      <div class="status-wrap" id="loggedInAs" style="margin-top:6px; justify-content:space-between;">
+        <span id="loggedInEmail" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+        <button class="btn sm ghost" id="logoutBtn" style="padding:3px 9px; font-size:11px;">Chiqish</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <main class="shell">
+
+      <section id="tab-dashboard" class="active">
+        <div id="setupBanner" class="setup-banner" hidden></div>
+        <div class="page-intro">
+          <h1>Ombor holati</h1>
+          <p>Bu yerda faqat <b>zaxira</b> kuzatiladi: nima bor, qayerdan olindi, qancha turibdi. Kimga sotilgani va sotish narxi — bu <b>Savdo (1C)</b> ilovasida, butunlay alohida tizimda.</p>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+      </section>
+
+      <section id="tab-iphone"><div id="shell-iphone"></div></section>
+      <section id="tab-samsung"><div id="shell-samsung"></div></section>
+      <section id="tab-other"><div id="shell-other"></div></section>
+      <section id="tab-laptop"><div id="shell-laptop"></div></section>
+      <section id="tab-pc"><div id="shell-pc"></div></section>
+      <section id="tab-all"><div id="shell-all"></div></section>
+
+      <section id="tab-stock">
+        <div class="page-intro">
+          <h1>Ehtiyot qismlar va aksessuarlar</h1>
+          <p>G'ilof, ekran, batareya, kabel va shunga o'xshash — dona sanash bo'yicha (IMEI yo'q, faqat miqdor).</p>
+        </div>
+        <div class="toolbar"><button class="btn primary lg" id="addStockBtn">+ Yangi mahsulot qo'shish</button></div>
+        <div class="toolbar">
+          <div class="search-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" id="stockSearch" placeholder="Qidirish: nomi, kategoriya, SKU…"></div>
+          <div class="chip-row" id="stockCatChips">
+            <button class="chip active" data-cat="all">Hammasi</button>
+            <button class="chip" data-cat="case">G'ilof</button>
+            <button class="chip" data-cat="screen">Ekran</button>
+            <button class="chip" data-cat="battery">Batareya</button>
+            <button class="chip" data-cat="charger">Zaryadlovchi</button>
+            <button class="chip" data-cat="cable">Kabel</button>
+            <button class="chip" data-cat="part">Boshqa ehtiyot qism</button>
+            <button class="chip" data-cat="accessory">Aksessuar</button>
+          </div>
+        </div>
+        <div class="table-wrap"><div class="table-scroll">
+          <table><thead><tr><th class="rownum">#</th><th>Nomi</th><th>Kategoriya</th><th>SKU</th><th>Miqdor</th><th>Tannarx</th><th>Sotish narxi</th><th></th></tr></thead>
+          <tbody id="tbody-stock"></tbody></table>
+        </div></div>
+        <div class="pager" id="pager-stock" style="padding:14px 0 0; text-align:center; font-size:12.5px; color:var(--ink-faint);"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="itemOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeItemModal">&times;</button>
+    <h2 id="itemModalTitle">Yangi qurilma</h2>
+    <div class="modal-sub">Faqat modelini yozsangiz ham bo'ladi — qolganini keyin to'ldirishingiz mumkin.</div>
+    <form id="itemForm">
+      <div class="form-section-label">Qurilma haqida</div>
+      <div class="form-grid">
+        <div class="field"><label>Turi</label>
+          <select id="f_brand"><option value="iphone">iPhone</option><option value="samsung">Samsung</option><option value="other">Boshqa telefon</option><option value="laptop">Noutbuk</option><option value="pc">Kompyuter</option></select>
+        </div>
+        <div class="field"><label>Holati</label>
+          <select id="f_status">
+            <option value="omborda">Omborda</option>
+            <option value="band">Band / ajratib qo'yilgan</option>
+            <option value="chiqarildi">Chiqarildi (do'konga/savdoga o'tkazildi)</option>
+            <option value="yoqolgan">Yo'qolgan</option>
+          </select>
+        </div>
+        <div class="field full"><label>Model / nomi</label><input type="text" id="f_model" placeholder="Masalan: iPhone 15 Pro, 256GB, Titan ko'k" required></div>
+        <div class="field"><label id="f_imei_label">IMEI raqami (ixtiyoriy)</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="f_imei" placeholder="35-29-61-65-23-15547" class="mono" maxlength="30" style="flex:1;">
+            <button type="button" class="btn sm" id="scanImeiBtn" title="QR/shtrix-kodni skanerlash" style="flex:none; padding:0 10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+          </div>
+        </div>
+        <div class="field"><label>Qutisi bormi?</label><select id="f_imeiBox"><option value="0">Yo'q</option><option value="1">Bor</option></select></div>
+      </div>
+
+      <div class="form-section-label">Qayerdan olindi (tannarx)</div>
+      <div class="form-grid">
+        <div class="field"><label>Kimdan / qaysi yetkazuvchidan</label><input type="text" id="f_source" placeholder="Masalan: Jasur aka"></div>
+        <div class="field"><label>Telefon raqami</label><input type="text" id="f_sourcePhone" placeholder="90-123-4567"></div>
+        <div class="field"><label>Qachon olindi</label><input type="date" id="f_buyDate"></div>
+        <div class="field"><label>Tannarx ($)</label><input type="number" step="1" id="f_buyPrice" class="mono" placeholder="0"></div>
+        <div class="field full"><label>Izoh (ixtiyoriy)</label><input type="text" id="f_note"></div>
+      </div>
+
+      <div class="form-section-label">Mijozlar katalogi</div>
+      <div class="form-grid">
+        <div class="field"><label>So'ralgan narx ($) — katalogda ko'rinadi</label><input type="number" step="1" id="f_askPrice" class="mono" placeholder="Masalan: 450"></div>
+        <div class="field" style="display:flex; align-items:center; gap:9px; margin-top:22px;">
+          <input type="checkbox" id="f_showCatalog" checked style="width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex:none;">
+          <label style="margin:0; font-weight:600; color:var(--ink); cursor:pointer;" for="f_showCatalog">Mijozlar katalogida ko'rsatish</label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn lg danger ghost" id="deleteFromEditBtn" hidden style="margin-right:auto; color:var(--danger); border-color:var(--danger);">O'chirish</button>
+        <button type="button" class="btn lg" id="cancelItemBtn">Bekor qilish</button>
+        <button type="submit" class="btn primary lg" id="saveItemBtn">Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="stockOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeStockModal">&times;</button>
+    <h2 id="stockModalTitle">Yangi mahsulot</h2>
+    <div class="modal-sub">G'ilof, ekran, batareya, kabel va shunga o'xshash — IMEI kerak emas, faqat miqdor.</div>
+    <form id="stockForm">
+      <div class="form-grid">
+        <div class="field full"><label>Nomi</label><input type="text" id="st_name" placeholder="Masalan: iPhone 15 Pro g'ilof, shaffof" required></div>
+        <div class="field"><label>Kategoriya</label>
+          <select id="st_category">
+            <option value="case">G'ilof</option><option value="screen">Ekran</option><option value="battery">Batareya</option>
+            <option value="charger">Zaryadlovchi</option><option value="cable">Kabel</option><option value="part">Boshqa ehtiyot qism</option><option value="accessory">Aksessuar</option>
+          </select>
+        </div>
+        <div class="field"><label>SKU / kod (ixtiyoriy)</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="st_sku" class="mono" style="flex:1;">
+            <button type="button" class="btn sm" id="scanSkuBtn" title="QR/shtrix-kodni skanerlash" style="flex:none; padding:0 10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+          </div>
+        </div>
+        <div class="field"><label>Miqdor (dona)</label><input type="number" step="1" id="st_qty" class="mono" value="0"></div>
+        <div class="field"><label>Tannarx, dona ($)</label><input type="number" step="1" id="st_buyPrice" class="mono"></div>
+        <div class="field"><label>Sotish narxi, dona ($)</label><input type="number" step="1" id="st_askPrice" class="mono"></div>
+        <div class="field"><label>Yetkazuvchi (ixtiyoriy)</label><input type="text" id="st_supplier"></div>
+        <div class="field full"><label>Izoh (ixtiyoriy)</label><input type="text" id="st_note"></div>
+        <div class="field" style="display:flex; align-items:center; gap:9px;">
+          <input type="checkbox" id="st_showCatalog" checked style="width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex:none;">
+          <label style="margin:0; font-weight:600; color:var(--ink); cursor:pointer;" for="st_showCatalog">Mijozlar katalogida ko'rsatish</label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn lg danger ghost" id="deleteStockBtn" hidden style="margin-right:auto; color:var(--danger); border-color:var(--danger);">O'chirish</button>
+        <button type="button" class="btn lg" id="cancelStockBtn">Bekor qilish</button>
+        <button type="submit" class="btn primary lg" id="saveStockBtn">Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="scanOverlay">
+  <div class="modal small">
+    <button class="modal-close" id="closeScanModal">&times;</button>
+    <h2>QR / shtrix-kodni skanerlash</h2>
+    <div class="modal-sub">Telefon qutisidagi yoki orqa qopqoq ostidagi IMEI/seriya shtrix-kodini kameraga qarating.</div>
+    <div id="scanReader" style="width:100%; min-height:260px; background:#000; border-radius:12px; overflow:hidden; margin-top:4px;"></div>
+    <div id="scanStatus" style="font-size:12.5px; color:var(--ink-dim); margin-top:10px; min-height:18px;"></div>
+    <div class="form-actions"><button type="button" class="btn lg" id="cancelScanBtn">Yopish</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal small">
+    <h2 id="confirmTitle">O'chirishni tasdiqlang</h2>
+    <div class="modal-sub" id="confirmText"></div>
+    <div class="form-actions">
+      <button class="btn" id="confirmCancel">Bekor qilish</button>
+      <button class="btn danger" id="confirmOk">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-auth-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ====================== FIREBASE CONFIG ======================
+     This MUST be a separate Firebase project from the Sales (1C) app —
+     that is the whole point of splitting these two apps apart. Create a
+     new project at https://console.firebase.google.com, enable
+     Firestore + Authentication (Email/Password), register a Web app,
+     and paste its config below. Also add the staff accounts under
+     Authentication > Users, and update the email allowlist in
+     firestore.rules to match. */
+  var firebaseConfig = {
+    apiKey: "REPLACE_WITH_NEW_PROJECT_API_KEY",
+    authDomain: "REPLACE.firebaseapp.com",
+    projectId: "REPLACE",
+    storageBucket: "REPLACE.firebasestorage.app",
+    messagingSenderId: "REPLACE",
+    appId: "REPLACE"
+  };
+  var firebaseReady = firebaseConfig.apiKey.indexOf("REPLACE") === -1;
+
+  var BRANDS = ["iphone","samsung","other","laptop","pc"];
+  var BRAND_LABEL = {iphone:"iPhone", samsung:"Samsung", other:"Boshqa telefon", laptop:"Noutbuk", pc:"Kompyuter"};
+  var STOCK_CAT_LABEL = {case:"G'ilof", screen:"Ekran", battery:"Batareya", charger:"Zaryadlovchi", cable:"Kabel", part:"Boshqa ehtiyot qism", accessory:"Aksessuar"};
+  var STATUS_LABEL = {omborda:"Omborda", band:"Band", chiqarildi:"Chiqarildi", yoqolgan:"Yo'qolgan"};
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function toast(msg, isErr){
+    var el = document.createElement("div");
+    el.className = "toast" + (isErr?" err":"");
+    el.textContent = msg;
+    document.getElementById("toasts").appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3200);
+  }
+  function setBtnLabel(btn, text){ btn.textContent = text; }
+
+  var state = {
+    items: [], stock: [],
+    sec: {
+      iphone:{search:"", status:"all"}, samsung:{search:"", status:"all"}, other:{search:"", status:"all"},
+      laptop:{search:"", status:"all"}, pc:{search:"", status:"all"}, all:{search:"", status:"all"}
+    },
+    stockSec: {search:"", cat:"all"},
+    editingId: null, editingBrand: "iphone", deleteId: null, stockEditingId: null
+  };
+
+  var db=null, auth=null, itemsCol=null, stockCol=null, catalogDevicesCol=null, catalogStockCol=null;
+
+  /* ====================== auth ====================== */
+  document.getElementById("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    if(!firebaseReady){ toast("Firebase sozlanmagan — yuqoridagi config'ni to'ldiring", true); return; }
+    var btn = document.getElementById("loginSubmitBtn");
+    btn.disabled = true; setBtnLabel(btn, "Kirilmoqda…");
+    var email = document.getElementById("loginEmail").value.trim();
+    var pass = document.getElementById("loginPassword").value;
+    auth.signInWithEmailAndPassword(email, pass).catch(function(err){
+      document.getElementById("loginError").style.display = "block";
+      document.getElementById("loginError").textContent = "Email yoki parol noto'g'ri";
+    }).finally(function(){ btn.disabled = false; setBtnLabel(btn, "Kirish"); });
+  });
+  document.getElementById("logoutBtn").addEventListener("click", function(){ if(auth) auth.signOut(); });
+
+  function showApp(){ document.getElementById("loginScreen").hidden = true; document.getElementById("appRoot").hidden = false; }
+  function showLogin(){ document.getElementById("loginScreen").hidden = false; document.getElementById("appRoot").hidden = true; }
+
+  if(!firebaseReady){
+    document.getElementById("setupBanner").hidden = false;
+    document.getElementById("setupBanner").innerHTML = "<b>Sozlash kerak:</b> warehouse.html faylining boshidagi <code>firebaseConfig</code>ni yangi, alohida Firebase loyihangiz bilan to'ldiring.";
+  } else {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    auth.onAuthStateChanged(function(user){
+      if(user){
+        document.getElementById("loggedInEmail").textContent = user.email;
+        document.getElementById("statusDot").className = "status-dot live";
+        document.getElementById("statusText").textContent = "Ulandi";
+        showApp();
+        startListeners();
+      } else {
+        showLogin();
+      }
+    });
+  }
+
+  function startListeners(){
+    itemsCol = db.collection("items");
+    stockCol = db.collection("stock");
+    catalogDevicesCol = db.collection("catalog_devices");
+    catalogStockCol = db.collection("catalog_stock");
+
+    itemsCol.orderBy("seq","desc").limit(3000).onSnapshot(function(snap){
+      state.items = snap.docs.map(function(d){ var v=Object.assign({},d.data()||{}); v.id=d.id; return v; });
+      renderAll();
+    });
+    stockCol.orderBy("seq","desc").limit(3000).onSnapshot(function(snap){
+      state.stock = snap.docs.map(function(d){ var v=Object.assign({},d.data()||{}); v.id=d.id; return v; });
+      renderStockSection();
+    });
+  }
+
+  function renderAll(){
+    BRANDS.forEach(renderSection);
+    renderSection("all");
+    renderDashboard();
+  }
+
+  /* ====================== public catalog mirror ======================
+     Only safe fields ever reach catalog_devices/catalog_stock. Firestore
+     rules (firestore.rules) make these two collections public-read and
+     deny all public access to items/stock, so cost price and supplier
+     phone numbers never leave this admin app. */
+  function syncItemToCatalog(id, data){
+    if(!catalogDevicesCol) return;
+    var visible = data.status==="omborda" && data.showCatalog!==false;
+    if(!visible){ catalogDevicesCol.doc(id).delete().catch(function(){}); return; }
+    catalogDevicesCol.doc(id).set({ category:data.brand, model:data.model, askPrice:data.askPrice!=null?data.askPrice:null, updatedAt:new Date().toISOString() }).catch(function(){});
+  }
+  function syncStockToCatalog(id, data){
+    if(!catalogStockCol) return;
+    var visible = data.showCatalog!==false && (data.qty==null || data.qty>0);
+    if(!visible){ catalogStockCol.doc(id).delete().catch(function(){}); return; }
+    catalogStockCol.doc(id).set({ category:data.category, name:data.name, askPrice:data.askPrice!=null?data.askPrice:null, inStock:data.qty==null||data.qty>0, updatedAt:new Date().toISOString() }).catch(function(){});
+  }
+
+  /* ====================== device items (serialized: phone/laptop/pc) ====================== */
+  function filteredItems(brand){
+    var st = state.sec[brand];
+    var list = brand==="all" ? state.items.slice() : state.items.filter(function(p){ return p.brand===brand; });
+    if(st.status!=="all") list = list.filter(function(p){ return p.status===st.status; });
+    if(st.search){
+      var q = st.search.toLowerCase();
+      list = list.filter(function(p){
+        return [p.model,p.imei,p.source,p.sourcePhone,p.note].some(function(f){ return f && String(f).toLowerCase().indexOf(q)!==-1; });
+      });
+    }
+    return list;
+  }
+  function sectionShellHTML(brand){
+    var statusChips = '<div class="chip-row" id="chips-'+brand+'">'+
+        '<button class="chip active" data-status="all">Hammasi</button>'+
+        '<button class="chip" data-status="omborda">Omborda</button>'+
+        '<button class="chip" data-status="band">Band</button>'+
+        '<button class="chip" data-status="chiqarildi">Chiqarildi</button>'+
+        '<button class="chip" data-status="yoqolgan">Yo\'qolgan</button>'+
+      '</div>';
+    return ''+
+      '<div class="toolbar"><button class="btn primary lg" id="addBtn-'+brand+'">+ Yangi qurilma qo\'shish</button></div>'+
+      '<div class="toolbar">'+
+        '<div class="search-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" id="search-'+brand+'" placeholder="Qidirish: model yoki IMEI…"></div>'+
+        statusChips+
+      '</div>'+
+      '<div class="table-wrap"><div class="table-scroll">'+
+        '<table><thead><tr><th class="rownum">#</th><th>Model</th><th>IMEI</th><th>Tannarx</th><th>Holati</th><th>Qachon olindi</th><th></th></tr></thead>'+
+        '<tbody id="tbody-'+brand+'"></tbody></table>'+
+      '</div></div>'+
+      '<div class="pager" id="pager-'+brand+'" style="padding:14px 0 0; text-align:center; font-size:12.5px; color:var(--ink-faint);"></div>';
+  }
+  function renderRow(p, i, brand){
+    var showBrandTag = brand==="all";
+    return '<tr>'+
+      '<td class="rownum">'+(i+1)+'</td>'+
+      '<td>'+(showBrandTag?'<span class="brandtag '+esc(p.brand)+'" style="margin-right:6px;">'+esc(BRAND_LABEL[p.brand]||p.brand)+'</span>':'')+esc(p.model||"")+'</td>'+
+      '<td class="mono">'+esc(p.imei||"—")+'</td>'+
+      '<td class="mono">'+(p.buyPrice!=null?("$"+p.buyPrice):"—")+'</td>'+
+      '<td><span class="badge '+esc(p.status)+'">'+esc(STATUS_LABEL[p.status]||p.status)+'</span></td>'+
+      '<td class="mono">'+esc(p.buyDate||"—")+'</td>'+
+      '<td><button type="button" class="btn sm" data-edit="'+p.id+'" data-brand="'+esc(p.brand)+'">Tahrir</button> <button type="button" class="btn sm danger ghost" data-del="'+p.id+'">O\'chir</button></td>'+
+    '</tr>';
+  }
+  function renderSection(brand){
+    var st = state.sec[brand];
+    var list = filteredItems(brand);
+    var tbody = document.getElementById("tbody-"+brand);
+    if(!tbody) return;
+    if(!list.length){
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Hech narsa topilmadi</div></td></tr>';
+    } else {
+      tbody.innerHTML = list.slice().sort(function(a,b){ return (b.seq||0)-(a.seq||0); }).map(function(p,i){ return renderRow(p,i,brand); }).join("");
+    }
+    var pager = document.getElementById("pager-"+brand);
+    if(pager) pager.textContent = list.length ? ("Jami: "+list.length+" ta") : "";
+    tbody.querySelectorAll("[data-edit]").forEach(function(btn){
+      btn.onclick = function(){ openItemModal(btn.getAttribute("data-edit"), btn.getAttribute("data-brand")); };
+    });
+    tbody.querySelectorAll("[data-del]").forEach(function(btn){
+      btn.onclick = function(){ openDeleteConfirm(btn.getAttribute("data-del")); };
+    });
+    var countEl = document.getElementById("count-"+brand);
+    if(countEl) countEl.textContent = brand==="all" ? state.items.length : state.items.filter(function(p){return p.brand===brand;}).length;
+  }
+  function bindSection(brand){
+    document.getElementById("search-"+brand).addEventListener("input", function(e){ state.sec[brand].search = e.target.value; renderSection(brand); });
+    document.getElementById("chips-"+brand).addEventListener("click", function(e){
+      var chip = e.target.closest(".chip"); if(!chip) return;
+      this.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      state.sec[brand].status = chip.getAttribute("data-status");
+      renderSection(brand);
+    });
+    document.getElementById("addBtn-"+brand).addEventListener("click", function(){ openItemModal(null, brand==="all"?"iphone":brand); });
+  }
+  BRANDS.concat(["all"]).forEach(function(b){ document.getElementById("shell-"+b).innerHTML = sectionShellHTML(b); });
+  BRANDS.concat(["all"]).forEach(bindSection);
+
+  function renderDashboard(){
+    var all = state.items;
+    var inStock = all.filter(function(p){return p.status==="omborda";});
+    var band = all.filter(function(p){return p.status==="band";});
+    var lost = all.filter(function(p){return p.status==="yoqolgan";});
+    var totalStockQty = state.stock.reduce(function(sum,s){ return sum + (s.qty||0); }, 0);
+    var kpis = [
+      {label:"Jami qurilmalar", value:all.length+" dona", cls:"", sub:"Barcha turlar bo'yicha"},
+      {label:"Omborda", value:inStock.length+" dona", cls:"", sub:"Hozir mavjud"},
+      {label:"Band", value:band.length+" dona", cls:"", sub:"Ajratib qo'yilgan"},
+      {label:"Yo'qolgan", value:lost.length+" dona", cls:lost.length?"danger":"", sub:lost.length?"E'tibor bering":"Yo'q"},
+      {label:"Ehtiyot qismlar", value:totalStockQty+" dona", cls:"", sub:"Barcha turlar jami"}
+    ];
+    document.getElementById("kpiGrid").innerHTML = kpis.map(function(k){
+      return '<div class="kpi"><div class="kpi-label">'+esc(k.label)+'</div><div class="kpi-value '+k.cls+'">'+esc(k.value)+'</div><div class="kpi-sub">'+esc(k.sub)+'</div></div>';
+    }).join("");
+  }
+
+  /* ====================== add/edit item modal ====================== */
+  function togglePickerByBrand(){
+    var brand = document.getElementById("f_brand").value;
+    var isSerialType = (brand==="laptop" || brand==="pc");
+    document.getElementById("f_imei_label").textContent = isSerialType ? "Seriya raqami (ixtiyoriy)" : "IMEI raqami (ixtiyoriy)";
+    document.getElementById("f_imei").placeholder = isSerialType ? "Seriya raqamini kiriting yoki skanerlang" : "35-29-61-65-23-15547";
+  }
+  document.getElementById("f_brand").addEventListener("change", togglePickerByBrand);
+
+  function formatImei(raw){
+    var d = String(raw||"").replace(/\D/g,"").slice(0,15);
+    var parts = [];
+    for(var i=0;i<10 && i<d.length;i+=2) parts.push(d.slice(i,i+2));
+    if(d.length>10) parts.push(d.slice(10));
+    return parts.join("-");
+  }
+  document.getElementById("f_imei").addEventListener("input", function(e){
+    var brand = document.getElementById("f_brand").value;
+    if(brand==="laptop" || brand==="pc") return;
+    var pos = e.target.selectionStart, before = e.target.value.length;
+    e.target.value = formatImei(e.target.value);
+    var after = e.target.value.length;
+    try{ e.target.selectionStart = e.target.selectionEnd = Math.max(0, pos+(after-before)); }catch(err){}
+  });
+
+  function openItemModal(id, brand){
+    state.editingId = id || null;
+    state.editingBrand = brand || "iphone";
+    var p = id ? state.items.find(function(x){return x.id===id;}) : null;
+    var useBrand = p ? (p.brand||state.editingBrand) : state.editingBrand;
+    document.getElementById("itemModalTitle").textContent = id ? "Qurilmani tahrirlash" : "Yangi "+BRAND_LABEL[useBrand];
+    document.getElementById("f_brand").value = useBrand;
+    document.getElementById("f_status").value = p ? (p.status||"omborda") : "omborda";
+    document.getElementById("f_model").value = p ? (p.model||"") : "";
+    document.getElementById("f_imei").value = p ? (p.imei||"") : "";
+    document.getElementById("f_imeiBox").value = p && p.imeiBox ? "1" : "0";
+    document.getElementById("f_source").value = p ? (p.source||"") : "";
+    document.getElementById("f_sourcePhone").value = p ? (p.sourcePhone||"") : "";
+    document.getElementById("f_buyDate").value = p ? (p.buyDate||"") : new Date().toISOString().slice(0,10);
+    document.getElementById("f_buyPrice").value = p && p.buyPrice!=null ? p.buyPrice : "";
+    document.getElementById("f_note").value = p ? (p.note||"") : "";
+    document.getElementById("f_askPrice").value = p && p.askPrice!=null ? p.askPrice : "";
+    document.getElementById("f_showCatalog").checked = p ? (p.showCatalog!==false) : true;
+    document.getElementById("deleteFromEditBtn").hidden = !id;
+    togglePickerByBrand();
+    document.getElementById("itemOverlay").classList.add("open");
+  }
+  function closeItemModal(){ document.getElementById("itemOverlay").classList.remove("open"); state.editingId = null; }
+  document.getElementById("closeItemModal").addEventListener("click", closeItemModal);
+  document.getElementById("cancelItemBtn").addEventListener("click", closeItemModal);
+
+  async function saveItem(ev){
+    ev.preventDefault();
+    if(!itemsCol){ toast("Firebase ulanmagan", true); return; }
+    var num = function(v){ v=String(v).trim(); if(v==="") return null; var n=Number(v); return isNaN(n)?null:n; };
+    var model = document.getElementById("f_model").value.trim();
+    if(!model){ toast("Model nomini kiriting", true); return; }
+    var data = {
+      brand: document.getElementById("f_brand").value,
+      model: model,
+      status: document.getElementById("f_status").value,
+      imei: document.getElementById("f_imei").value.trim(),
+      imeiBox: document.getElementById("f_imeiBox").value==="1",
+      source: document.getElementById("f_source").value.trim(),
+      sourcePhone: document.getElementById("f_sourcePhone").value.trim(),
+      buyDate: document.getElementById("f_buyDate").value,
+      buyPrice: num(document.getElementById("f_buyPrice").value),
+      note: document.getElementById("f_note").value.trim(),
+      askPrice: num(document.getElementById("f_askPrice").value),
+      showCatalog: document.getElementById("f_showCatalog").checked,
+      updatedAt: new Date().toISOString()
+    };
+    var btn = document.getElementById("saveItemBtn");
+    btn.disabled = true;
+    try{
+      if(state.editingId){
+        await itemsCol.doc(state.editingId).update(data);
+        syncItemToCatalog(state.editingId, data);
+        toast("O'zgarishlar saqlandi");
+      } else {
+        data.seq = Date.now(); data.createdAt = data.updatedAt;
+        var ref = await itemsCol.add(data);
+        syncItemToCatalog(ref.id, data);
+        toast(BRAND_LABEL[data.brand]+" qo'shildi");
+      }
+      closeItemModal();
+    }catch(e){ toast("Saqlashda xatolik: "+(e.code||e.message), true); }
+    btn.disabled = false;
+  }
+  document.getElementById("itemForm").addEventListener("submit", saveItem);
+
+  var confirmTarget = null, confirmKind = null;
+  function openDeleteConfirm(id){
+    confirmTarget = id; confirmKind = "item";
+    var p = state.items.find(function(x){return x.id===id;});
+    document.getElementById("confirmTitle").textContent = "O'chirishni tasdiqlang";
+    document.getElementById("confirmText").textContent = "\""+((p&&p.model)||"Ushbu yozuv")+"\" butunlay o'chiriladi.";
+    document.getElementById("confirmOverlay").classList.add("open");
+  }
+  document.getElementById("deleteFromEditBtn").addEventListener("click", function(){
+    var id = state.editingId; if(!id) return;
+    closeItemModal(); openDeleteConfirm(id);
+  });
+  document.getElementById("confirmCancel").addEventListener("click", function(){ document.getElementById("confirmOverlay").classList.remove("open"); confirmTarget=null; });
+  document.getElementById("confirmOk").addEventListener("click", async function(){
+    if(!confirmTarget) return;
+    try{
+      if(confirmKind==="item"){
+        await itemsCol.doc(confirmTarget).delete();
+        if(catalogDevicesCol) catalogDevicesCol.doc(confirmTarget).delete().catch(function(){});
+      } else {
+        await stockCol.doc(confirmTarget).delete();
+        if(catalogStockCol) catalogStockCol.doc(confirmTarget).delete().catch(function(){});
+      }
+      toast("O'chirildi");
+    }catch(e){ toast("O'chirishda xatolik", true); }
+    document.getElementById("confirmOverlay").classList.remove("open");
+    confirmTarget = null;
+  });
+
+  /* ====================== stock (bulk parts/accessories) ====================== */
+  function openStockModal(id){
+    state.stockEditingId = id || null;
+    var s = id ? state.stock.find(function(x){return x.id===id;}) : null;
+    document.getElementById("stockModalTitle").textContent = id ? "Mahsulotni tahrirlash" : "Yangi mahsulot";
+    document.getElementById("st_name").value = s ? (s.name||"") : "";
+    document.getElementById("st_category").value = s ? (s.category||"case") : "case";
+    document.getElementById("st_sku").value = s ? (s.sku||"") : "";
+    document.getElementById("st_qty").value = s && s.qty!=null ? s.qty : 0;
+    document.getElementById("st_buyPrice").value = s && s.buyPrice!=null ? s.buyPrice : "";
+    document.getElementById("st_askPrice").value = s && s.askPrice!=null ? s.askPrice : "";
+    document.getElementById("st_supplier").value = s ? (s.supplier||"") : "";
+    document.getElementById("st_note").value = s ? (s.note||"") : "";
+    document.getElementById("st_showCatalog").checked = s ? (s.showCatalog!==false) : true;
+    document.getElementById("deleteStockBtn").hidden = !id;
+    document.getElementById("stockOverlay").classList.add("open");
+  }
+  function closeStockModal(){ document.getElementById("stockOverlay").classList.remove("open"); state.stockEditingId = null; }
+  async function saveStock(ev){
+    ev.preventDefault();
+    if(!stockCol){ toast("Firebase ulanmagan", true); return; }
+    var num = function(v){ v=String(v).trim(); if(v==="") return null; var n=Number(v); return isNaN(n)?null:n; };
+    var name = document.getElementById("st_name").value.trim();
+    if(!name){ toast("Nomini kiriting", true); return; }
+    var data = {
+      name: name, category: document.getElementById("st_category").value,
+      sku: document.getElementById("st_sku").value.trim(),
+      qty: num(document.getElementById("st_qty").value) || 0,
+      buyPrice: num(document.getElementById("st_buyPrice").value),
+      askPrice: num(document.getElementById("st_askPrice").value),
+      supplier: document.getElementById("st_supplier").value.trim(),
+      note: document.getElementById("st_note").value.trim(),
+      showCatalog: document.getElementById("st_showCatalog").checked,
+      updatedAt: new Date().toISOString()
+    };
+    var btn = document.getElementById("saveStockBtn");
+    btn.disabled = true;
+    try{
+      if(state.stockEditingId){
+        await stockCol.doc(state.stockEditingId).update(data);
+        syncStockToCatalog(state.stockEditingId, data);
+        toast("O'zgarishlar saqlandi");
+      } else {
+        data.seq = Date.now(); data.createdAt = data.updatedAt;
+        var ref = await stockCol.add(data);
+        syncStockToCatalog(ref.id, data);
+        toast("Mahsulot qo'shildi");
+      }
+      closeStockModal();
+    }catch(e){ toast("Saqlashda xatolik: "+(e.code||e.message), true); }
+    btn.disabled = false;
+  }
+  function filteredStock(){
+    var st = state.stockSec;
+    var list = state.stock.slice();
+    if(st.cat!=="all") list = list.filter(function(s){ return s.category===st.cat; });
+    if(st.search){
+      var q = st.search.toLowerCase();
+      list = list.filter(function(s){ return [s.name,s.sku,STOCK_CAT_LABEL[s.category]].some(function(f){ return f && String(f).toLowerCase().indexOf(q)!==-1; }); });
+    }
+    return list;
+  }
+  function renderStockSection(){
+    var list = filteredStock().slice().sort(function(a,b){ return (b.seq||0)-(a.seq||0); });
+    var tbody = document.getElementById("tbody-stock");
+    if(!tbody) return;
+    if(!list.length){
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Hech narsa topilmadi</div></td></tr>';
+    } else {
+      tbody.innerHTML = list.map(function(s,i){
+        var low = s.qty!=null && s.qty<=2;
+        return '<tr><td class="rownum">'+(i+1)+'</td><td>'+esc(s.name||"")+'</td>'+
+          '<td><span class="brandtag other">'+esc(STOCK_CAT_LABEL[s.category]||s.category||"")+'</span></td>'+
+          '<td class="mono">'+esc(s.sku||"—")+'</td>'+
+          '<td class="mono'+(low?' danger':'')+'">'+(s.qty!=null?s.qty:0)+' dona</td>'+
+          '<td class="mono">'+(s.buyPrice!=null?("$"+s.buyPrice):"—")+'</td>'+
+          '<td class="mono">'+(s.askPrice!=null?("$"+s.askPrice):"—")+'</td>'+
+          '<td><button type="button" class="btn sm" data-stock-edit="'+s.id+'">Tahrir</button> <button type="button" class="btn sm danger ghost" data-stock-del="'+s.id+'">O\'chir</button></td></tr>';
+      }).join("");
+    }
+    document.getElementById("pager-stock").textContent = list.length ? ("Jami: "+list.length+" ta") : "";
+    tbody.querySelectorAll("[data-stock-edit]").forEach(function(btn){ btn.onclick = function(){ openStockModal(btn.getAttribute("data-stock-edit")); }; });
+    tbody.querySelectorAll("[data-stock-del]").forEach(function(btn){
+      btn.onclick = function(){
+        confirmTarget = btn.getAttribute("data-stock-del"); confirmKind = "stock";
+        var s = state.stock.find(function(x){return x.id===confirmTarget;});
+        document.getElementById("confirmTitle").textContent = "O'chirishni tasdiqlang";
+        document.getElementById("confirmText").textContent = "\""+((s&&s.name)||"Ushbu mahsulot")+"\" butunlay o'chiriladi.";
+        document.getElementById("confirmOverlay").classList.add("open");
+      };
+    });
+    var countEl = document.getElementById("count-stock");
+    if(countEl) countEl.textContent = state.stock.length;
+  }
+  document.getElementById("addStockBtn").addEventListener("click", function(){ openStockModal(null); });
+  document.getElementById("closeStockModal").addEventListener("click", closeStockModal);
+  document.getElementById("cancelStockBtn").addEventListener("click", closeStockModal);
+  document.getElementById("stockForm").addEventListener("submit", saveStock);
+  document.getElementById("deleteStockBtn").addEventListener("click", function(){
+    if(!state.stockEditingId) return;
+    confirmTarget = state.stockEditingId; confirmKind = "stock";
+    var s = state.stock.find(function(x){return x.id===confirmTarget;});
+    closeStockModal();
+    document.getElementById("confirmTitle").textContent = "O'chirishni tasdiqlang";
+    document.getElementById("confirmText").textContent = "\""+((s&&s.name)||"Ushbu mahsulot")+"\" butunlay o'chiriladi.";
+    document.getElementById("confirmOverlay").classList.add("open");
+  });
+  document.getElementById("stockSearch").addEventListener("input", function(e){ state.stockSec.search = e.target.value; renderStockSection(); });
+  document.getElementById("stockCatChips").addEventListener("click", function(e){
+    var chip = e.target.closest(".chip"); if(!chip) return;
+    this.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+    chip.classList.add("active");
+    state.stockSec.cat = chip.getAttribute("data-cat");
+    renderStockSection();
+  });
+
+  /* ====================== QR / barcode scanner ====================== */
+  function parseScannedPayload(text){
+    text = String(text||"").trim();
+    var result = {imei:null, extra:null};
+    var kv = {};
+    text.replace(/([A-Za-z]{2,10})\s*[:=]\s*([A-Za-z0-9.\-]+)/g, function(m,k,v){ kv[k.toUpperCase()]=v; return m; });
+    var imeiCandidate = kv.IMEI || kv.IMEI1 || kv.IMEI2 || null;
+    if(!imeiCandidate){
+      var digitRuns = text.match(/\d{14,16}/g);
+      if(digitRuns && digitRuns.length) imeiCandidate = digitRuns[0];
+    }
+    if(imeiCandidate) result.imei = imeiCandidate.replace(/\D/g,"").slice(0,15);
+    var modelHint = kv.MODEL || kv.SN || kv.SKU || null;
+    if(modelHint) result.extra = modelHint;
+    if(!result.imei && !result.extra) result.imei = text.replace(/\s+/g,"").slice(0,30);
+    return result;
+  }
+  var qrScanner = null, scanTargetField = "f_imei";
+  function openScanModal(targetFieldId){
+    scanTargetField = targetFieldId || "f_imei";
+    document.getElementById("scanOverlay").classList.add("open");
+    document.getElementById("scanStatus").textContent = "Kamera ochilmoqda…";
+    if(typeof Html5Qrcode === "undefined"){ document.getElementById("scanStatus").textContent = "Skaner kutubxonasi yuklanmadi."; return; }
+    qrScanner = new Html5Qrcode("scanReader");
+    qrScanner.start({facingMode:"environment"}, {fps:10, qrbox:{width:240,height:240}},
+      function(decodedText){
+        var parsed = parseScannedPayload(decodedText);
+        var targetEl = document.getElementById(scanTargetField);
+        if(parsed.imei && targetEl){
+          if(scanTargetField==="f_imei"){
+            var brand = document.getElementById("f_brand").value;
+            targetEl.value = (brand==="laptop"||brand==="pc") ? parsed.imei : formatImei(parsed.imei);
+          } else { targetEl.value = parsed.imei; }
+        } else if(targetEl){ targetEl.value = decodedText.replace(/\s+/g,"").slice(0,30); }
+        var msg = parsed.imei ? ("Topildi: "+parsed.imei) : ("Skaner natijasi: "+decodedText);
+        if(parsed.extra) msg += " (qo'shimcha: "+parsed.extra+")";
+        closeScanModal();
+        toast(msg);
+      },
+      function(){ /* keep scanning */ }
+    ).catch(function(err){
+      document.getElementById("scanStatus").textContent = "Kameraga ruxsat berilmadi: "+(err&&err.message?err.message:err);
+    });
+  }
+  function closeScanModal(){
+    document.getElementById("scanOverlay").classList.remove("open");
+    if(qrScanner){ qrScanner.stop().then(function(){ qrScanner.clear(); }).catch(function(){}); qrScanner=null; }
+  }
+  document.getElementById("scanImeiBtn").addEventListener("click", function(){ openScanModal("f_imei"); });
+  document.getElementById("scanSkuBtn").addEventListener("click", function(){ openScanModal("st_sku"); });
+  document.getElementById("closeScanModal").addEventListener("click", closeScanModal);
+  document.getElementById("cancelScanBtn").addEventListener("click", closeScanModal);
+
+  /* ====================== mobile nav ====================== */
+  function switchTab(tab){
+    document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-tab")===tab); });
+    ["dashboard"].concat(BRANDS).concat(["all","stock"]).forEach(function(t){
+      var el = document.getElementById("tab-"+t);
+      if(el) el.classList.toggle("active", t===tab);
+    });
+  }
+  document.getElementById("tabNav").addEventListener("click", function(e){
+    var btn = e.target.closest(".tab-btn"); if(!btn) return;
+    switchTab(btn.getAttribute("data-tab"));
+    closeMobileMenu();
+  });
+  function openMobileMenu(){ document.getElementById("sidebar").classList.add("open"); document.getElementById("sidebarBackdrop").classList.add("open"); }
+  function closeMobileMenu(){ document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebarBackdrop").classList.remove("open"); }
+  document.getElementById("menuOpenBtn").addEventListener("click", openMobileMenu);
+  document.getElementById("menuCloseBtn").addEventListener("click", closeMobileMenu);
+  document.getElementById("sidebarBackdrop").addEventListener("click", closeMobileMenu);
+
+})();
+</script>
+</body>
+</html>

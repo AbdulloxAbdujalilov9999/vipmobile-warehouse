@@ -115,7 +115,7 @@
 </main>
 
 <footer>
-  VIP Mobile Warehouse &middot; narxlar o'zgarishi mumkin, mavjudligini qo'ng'iroq orqali tasdiqlang &middot; <a href="index.html">Xodimlar uchun</a>
+  VIP Mobile Warehouse &middot; narxlar o'zgarishi mumkin, mavjudligini qo'ng'iroq orqali tasdiqlang &middot; <a href="warehouse.html">Xodimlar uchun</a>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.13.0/firebase-app-compat.js"></script>
@@ -124,17 +124,19 @@
 (function(){
   "use strict";
 
-  /* Same Firebase project as the admin app (index.html). This page only ever
-     reads catalog_devices/catalog_stock — see firestore.rules: those two
-     collections are the only ones a public, unauthenticated visitor can read. */
+  /* Same Firebase project as warehouse.html (NOT the Sales/1C app — this
+     warehouse platform is a separate Firebase project on purpose). This
+     page only ever reads catalog_devices/catalog_stock — see
+     firestore.rules: those two collections are the only ones a public,
+     unauthenticated visitor can read. Fill in once the warehouse Firebase
+     project is created (same values as in warehouse.html). */
   var firebaseConfig = {
-    apiKey: "AIzaSyAP8I1WNOtmeixJy8-T9wr7ZNc848Dwg9U",
-    authDomain: "messeges-to-her.firebaseapp.com",
-    projectId: "messeges-to-her",
-    storageBucket: "messeges-to-her.firebasestorage.app",
-    messagingSenderId: "805970086170",
-    appId: "1:805970086170:web:f67d5948078018230ec4a3",
-    measurementId: "G-1MSS5PY778"
+    apiKey: "REPLACE_WITH_NEW_PROJECT_API_KEY",
+    authDomain: "REPLACE.firebaseapp.com",
+    projectId: "REPLACE",
+    storageBucket: "REPLACE.firebasestorage.app",
+    messagingSenderId: "REPLACE",
+    appId: "REPLACE"
   };
 
   /* Set this to the store's real phone number (E.164, e.g. +998901234567). */
